@@ -14,7 +14,8 @@ import smtplib
 from email.mime.text import MIMEText
 from email.header import Header
 
-ret = input('Bgein Spider?')
+#ret = input('Bgein Spider?')
+ret = 1
 if not ret:
 	exit()
 
@@ -27,8 +28,19 @@ chrome_options.add_argument('--disable-dev-shm-usage')
 driver = webdriver.Chrome(options=chrome_options)
 
 db_conn = Sql.conn_db('joboffers')
-base_url = 'https://www.lagou.com/jobs/list_%E6%95%B0%E6%8D%AE?px=new&gx=%E5%85%A8%E8%81%8C&city=%E6%88%90%E9%83%BD#order'
+base_url = 'https://landing.zhaopin.com/register?utm_source=baidupcpz&utm_medium=cpt&utm_provider=partner&sid=121113803'
 driver.get(base_url)
+
+driver.find_element_by_class_name("input-1").send_keys('18224482521')
+driver.find_element_by_class_name("zppp-sms__send").click()
+code = input('code:')
+driver.find_element_by_class_name("input-2").send_keys(code)
+driver.find_element_by_class_name("zppp-submit").click()
+time.sleep(4)
+driver.find_element_by_class_name("a-input__native").send_keys('数据')
+driver.find_element_by_class_name("search-box__button").click()
+time.sleep(4)
+driver.find_elements_by_class_name('listsort__uls__item__a')[-1].click()
 
 html = driver.page_source
 soup = BeautifulSoup(html, 'html.parser')
