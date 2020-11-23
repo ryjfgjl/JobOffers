@@ -40,12 +40,9 @@ time.sleep(4)
 driver.find_element_by_class_name("a-input__native").send_keys('数据')
 driver.find_element_by_class_name("search-box__button").click()
 time.sleep(4)
-driver.find_elements_by_class_name('listsort__uls__item__a')[-1].click()
+driver.find_elements_by_class_name('listsort__uls__item')[-1].click()
 
-html = driver.page_source
-soup = BeautifulSoup(html, 'html.parser')
-total_page = soup.find('span', 'totalNum')
-total_page = int(total_page.get_text())
+total_page = 30
 
 keyWord = '数据'
 createTime = datetime.now()
@@ -58,36 +55,36 @@ with open(error_position, 'w') as f:
 for page in range(total_page):
     html = driver.page_source
     soup = BeautifulSoup(html, 'html.parser')
-    positions = soup.find(id="s_position_list").find('ul').find_all('li', 'con_list_item')
+    positions = soup.find(id="listContent").find_all('div', 'contentpile__content__wrapper__item')
 
     for index in range(len(positions)):
         sql = ''
         try:
             position = positions[index]
-            positionId = position['data-positionid']
-            salary = position['data-salary']
-            companyName = position['data-company']
-            positionName = position['data-positionname']
+            positionId = position['zp-stat-funczone']
+            salary = position.find('p', 'contentpile__content__wrapper__item__info__box__job__saray').get_text()
+            companyName = position.find('a', 'contentpile__content__wrapper__item__info__box__cname__title').get_text()
+            positionName = position.find('span', 'contentpile__content__wrapper__item__info__box__jobname__title').get_text()
             if 'java' in positionName.lower() or '实习生' in positionName or '经理' in positionName or '主管' in positionName or '客服' in positionName or 'hadoop' in positionName.lower() or 'oracle' in positionName.lower():
                 continue
-            companyId = position['data-companyid']
-            positionLink = position.find('a', 'position_link')['href']
-            district = position.find('a', 'position_link').find('span', 'add').get_text()
+            companyId = ''
+            positionLink = position.find('a', 'contentpile__content__wrapper__item__info')['href']
+            job_demand = position.find('ul', 'contentpile__content__wrapper__item__info__box__job__demand').find('span', 'add')
+            district = position.find('ul', 'contentpile__content__wrapper__item__info__box__job__demand').find('li', 'contentpile__content__wrapper__item__info__box__job__demand__item').get_text()
 
-            publishTime = position.find('div', 'position').find('span', 'format-time').get_text()
-            workYear = position.find('div', 'position').find('div', 'p_bot').find('div', 'li_b_l').get_text().split('/')[0].split('\n')[-1].strip()
-            if workYear not in ('经验3-5年', '经验1-3年', '经验不限', '经验1年以下'):
-                continue
-            education = position.find('div', 'position').find('div', 'p_bot').find('div', 'li_b_l').get_text().split('/')[-1].strip()
-            if education in ('硕士', '博士'):
-                continue
-            industry = position.find('div', 'company').find('div', 'industry').get_text().strip()
-            skillLables = position.find('div', 'list_item_bot').find('div', 'li_b_l').find_all('span')
+            
+            workYear = position.find('ul', 'contentpile__content__wrapper__item__info__box__job__demand').find_all('li', 'contentpile__content__wrapper__item__info__box__job__demand__item')[1].get_text()
+            #if workYear not in ('经验3-5年', '经验1-3年', '经验不限', '经验1年以下'):
+                #continue
+            education = position.find('ul', 'contentpile__content__wrapper__item__info__box__job__demand').find_all('li', 'contentpile__content__wrapper__item__info__box__job__demand__item')[-1].get_text()
+            #if education in ('硕士', '博士'):
+            #    continue
+            industry = position.find('div', 'contentpile__content__wrapper__item__info__box__job__comdec').get_text()
+            skillLables = position.find('div', 'contentpile__content__wrapper__item__info__box__welfare').find_all('div')
             skillLables = ' | '.join([skillLable.get_text() for skillLable in skillLables])
 
-            companyLabeles = position.find('div', 'list_item_bot').find('div', 'li_b_r').get_text()[1:-2]
 
-            position = driver.find_element_by_xpath('//*[@id="s_position_list"]/ul/li[{}]/div[1]/div[1]/div[1]/a/h3'.format(index+1))
+            position = driver.find_element_by_xpath('//*[@id="listContent"]/div{}/div/a/div[1]/div[1]/span'.format(index+1))
             actions = ActionChains(driver)
             actions.move_to_element(position)
             actions.click(position)
@@ -96,9 +93,11 @@ for page in range(total_page):
             driver.switch_to.window(driver.window_handles[1])
             html = driver.page_source
             soup = BeautifulSoup(html, 'html.parser')
-
-            jobDetail = soup.find(id='job_detail').find('dd', 'job_bt').find('div', 'job-detail').get_text().replace('"',"'")
-            jobAddr = soup.find(id='job_detail').find('dd', 'job-address').find('div', 'work_addr').get_text()
+            
+            publishTime = soup.find('span', 'summary-plane__time').get_text()
+            jobDetail = soup.find('div', 'describtion__detail-content').get_text().replace('"',"'")
+            jobAddr = soup.find('span', 'job-address__content-text').get_text()
+            companyLabeles = soup.find('span', 'highlights__content').get_text()
 
             driver.close()
             driver.switch_to.window(driver.window_handles[0])
